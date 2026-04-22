@@ -10,8 +10,6 @@ The repository is split into two apps:
 ## Live Project
 
 - Frontend: https://diet-planner-ten-wheat.vercel.app/
-- Backend: https://diet-planner-ttj7.onrender.com
-- Health check: https://diet-planner-ttj7.onrender.com/health
 
 ## What The App Does
 
