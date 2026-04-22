@@ -16,10 +16,16 @@ const Login = () => {
     setError("");
     setLoading(true);
 
+    if (!password || (!email.trim() && !username.trim())) {
+      setError("Enter your email or username, along with your password.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data } = await axios.post(
         "/api/v1/users/login",
-        { email, password, username },
+        { email: email.trim(), password, username: username.trim() },
         { withCredentials: true }
       );
 
@@ -86,7 +92,6 @@ const Login = () => {
                   name="username"
                   type="text"
                   autoComplete="username"
-                  required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
@@ -120,7 +125,6 @@ const Login = () => {
                   name="email"
                   type="email"
                   autoComplete="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="appearance-none rounded-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"

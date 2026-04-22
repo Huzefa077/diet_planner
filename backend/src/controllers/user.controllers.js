@@ -23,8 +23,12 @@ const generateAccessAndRefreshTokens = async(userId)=>{
 
 
 const registerUser = asyncHandler(async(req,res)=>{
-    const {fullname,email,username,password} = req.body;
-    if(!(fullname || email || username || password)){
+    const fullname = req.body.fullname?.trim();
+    const email = req.body.email?.trim().toLowerCase();
+    const username = req.body.username?.trim().toLowerCase();
+    const password = req.body.password;
+
+    if(!(fullname && email && username && password)){
         console.log("All fields are required")
         throw new ApiError(400,"All fields are required")
         
@@ -39,7 +43,7 @@ const registerUser = asyncHandler(async(req,res)=>{
         fullname,
         email,
         password,
-        username:username.toLowerCase()
+        username
     })
     const createdUser = await User.findById(user._id).select("-password -refreshToken");
     if(!createdUser){
@@ -51,12 +55,18 @@ const registerUser = asyncHandler(async(req,res)=>{
 })
 
 const loginUser = asyncHandler(async(req,res)=>{
-    const {email,username,password} = req.body
-    if(!(password|| email)){
+    const email = req.body.email?.trim().toLowerCase();
+    const username = req.body.username?.trim().toLowerCase();
+    const password = req.body.password;
+
+    if(!password || (!email && !username)){
         throw new ApiError(400,"Username or email is required")
     }
     const user = await User.findOne({
-        $or:[{username},{email}]
+        $or:[
+            ...(username ? [{ username }] : []),
+            ...(email ? [{ email }] : [])
+        ]
     })
     if(!user){
         throw new ApiError(404,"User does not exists");
