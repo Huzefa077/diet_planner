@@ -1,8 +1,43 @@
-# React + Vite
+# Diet Planner Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the React client for Diet Planner. It handles authentication screens, profile setup, daily meal plan views, seasonal recommendations, and the dashboard.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19
+- Vite 6
+- React Router DOM
+- Axios
+- Recharts
+- Tailwind CSS 4
+- DaisyUI
+
+## Local Run
+
+```bash
+npm install
+npm run dev
+```
+
+Create a `.env` file with:
+
+```env
+VITE_API_URL=http://localhost:2000
+```
+
+## Production
+
+The frontend is deployed on Vercel:
+
+- Live URL: https://diet-planner-ten-wheat.vercel.app/
+
+Build settings:
+
+- Build command: `npm run build`
+- Output directory: `dist`
+
+## Notes
+
+- Client-side routing is handled through `vercel.json`.
+- API requests are configured in `src/lib/axios.js`.
+- For local development, Vite also proxies `/api` requests to the backend.
