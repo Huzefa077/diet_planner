@@ -1,1 +1,1 @@
-export const DB_NAME = "library"
+export const DB_NAME = process.env.DB_NAME || "test"
