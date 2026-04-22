@@ -3,6 +3,7 @@ import csv from "csv-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { Food } from "./src/models/foodItem.model.js"; // Update the path as needed
+import { DB_NAME } from "./src/constants.js";
 
 dotenv.config({
   path: "./.env",
@@ -14,7 +15,11 @@ if (!process.env.MONGODB_URI) {
 
 // Connect to the same MongoDB database the app uses
 mongoose
-  .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .connect(process.env.MONGODB_URI, {
+    dbName: DB_NAME,
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("Connected to MongoDB Atlas"))
   .catch((err) => console.error("Error connecting to MongoDB Atlas:", err));
 

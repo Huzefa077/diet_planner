@@ -21,9 +21,15 @@ export const UserPreferencesForm = () => {
 
   const activityLevelsOptions = ["Low", "Moderate", "High"];
   const preferenceOptions = ["Vegan", "Vegetarian", "Non-Vegetarian"];
-  const genderOptions = ["Male", "Female", "Non-binary", "Prefer not to say"];
+  const genderOptions = ["Male", "Female", "Other"];
   const goalsOptions = ["Weight loss", "Weight gain", "Muscle Building"];
-  const workTypeOptions = ["Sedentary", "Moderate", "Heavy"];
+  const workTypeOptions = [
+    { label: "Sedentary", value: "sedentary" },
+    { label: "Lightly Active", value: "lightly-active" },
+    { label: "Moderately Active", value: "moderately-active" },
+    { label: "Very Active", value: "very-active" },
+    { label: "Extra Active", value: "extra-active" },
+  ];
 
   useEffect(() => {
     const loadCurrentProfile = async () => {
@@ -180,8 +186,11 @@ export const UserPreferencesForm = () => {
                     Select an option
                   </option>
                   {field.options.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
+                    <option
+                      key={typeof option === "string" ? option : option.value}
+                      value={typeof option === "string" ? option : option.value}
+                    >
+                      {typeof option === "string" ? option : option.label}
                     </option>
                   ))}
                 </select>
