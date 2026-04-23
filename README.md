@@ -9,7 +9,7 @@ The repository is split into two apps:
 
 ## Live Project
 
-- Frontend: https://diet-planner-ten-wheat.vercel.app/
+- https://diet-planner-ten-wheat.vercel.app/
 
 ## What The App Does
 
