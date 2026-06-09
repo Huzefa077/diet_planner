@@ -10,6 +10,7 @@ import WhyChooseUs from '../WhyChooseUs'
 function Home() {
   const [latestPlan, setLatestPlan] = useState(null)
   const [loadingPlan, setLoadingPlan] = useState(true)
+  const [username, setUsername] = useState("")
   const isLoggedIn = Boolean(localStorage.getItem("token"))
 
   useEffect(() => {
@@ -17,6 +18,12 @@ function Home() {
       if (!isLoggedIn) {
         setLoadingPlan(false)
         return
+      }
+
+      // Get username from localStorage
+      const storedUsername = localStorage.getItem("username")
+      if (storedUsername) {
+        setUsername(storedUsername)
       }
 
       try {
@@ -54,7 +61,7 @@ function Home() {
     <div>
       <Navbar/>
       <br />
-      <HeroSection/>
+      <HeroSection username={username} />
       {isLoggedIn && !loadingPlan && (
         <section className="mx-auto mt-8 max-w-5xl px-6">
           <div className="rounded-3xl bg-white p-8 shadow-xl">

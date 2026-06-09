@@ -56,11 +56,26 @@ const foodSchema = new Schema ({
     averageRating: {
          type: Number,
           default: 0 
-    }, // New field
+    },
     ratingCount: {
          type: Number,
           default: 0 
     },
+    ratings: [
+        {
+            userId: {
+                type: Schema.Types.ObjectId,
+                ref: "User",
+                required: true,
+            },
+            rating: {
+                type: Number,
+                min: 1,
+                max: 5,
+                required: true,
+            },
+        },
+    ],
 
 
 },{timestamps:true});

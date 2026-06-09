@@ -54,6 +54,7 @@ const DietPlan = () => {
   const [error, setError] = useState("");
   const [busyMeal, setBusyMeal] = useState("");
   const [completingDay, setCompletingDay] = useState("");
+  const [expandedDays, setExpandedDays] = useState({}); // Track expanded/collapsed days
   const userId = localStorage.getItem("userId");
 
   useEffect(() => {
@@ -181,6 +182,13 @@ const DietPlan = () => {
     }
   };
 
+  const toggleDayDetails = (dayDate) => {
+    setExpandedDays((prev) => ({
+      ...prev,
+      [dayDate]: !prev[dayDate],
+    }));
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -290,15 +298,27 @@ const DietPlan = () => {
             {(() => {
               const dayTotals = dayPlan.totalNutrients || emptyMacros;
               const isCompleted = dayPlan.status === "Completed";
+              const dayExpanded = expandedDays[dayPlan.date] !== false; // Default to expanded
               return (
                 <div className="text-center">
-                  <h2 className="text-2xl font-semibold text-gray-800">
-                    {new Date(dayPlan.date).toLocaleDateString()}
-                  </h2>
-                  <p className="mt-2 text-sm text-gray-600">
-                    Planned totals: {dayTotals.calories} kcal, {dayTotals.protein}g protein,
-                    {` ${dayTotals.carbs}g carbs, ${dayTotals.fats}g fats`}
-                  </p>
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <h2 className="text-2xl font-semibold text-gray-800">
+                      {new Date(dayPlan.date).toLocaleDateString()}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => toggleDayDetails(dayPlan.date)}
+                      className="rounded-lg bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 hover:bg-blue-200"
+                    >
+                      {dayExpanded ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {dayExpanded && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      Planned totals: {dayTotals.calories} kcal, {dayTotals.protein}g protein,
+                      {` ${dayTotals.carbs}g carbs, ${dayTotals.fats}g fats`}
+                    </p>
+                  )}
                   <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                     <span
                       className={`rounded-full px-4 py-2 text-sm font-semibold ${
@@ -309,24 +329,27 @@ const DietPlan = () => {
                     >
                       {isCompleted ? "Completed" : "In Progress"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCompleteDay(dayPlan.date)}
-                      disabled={isCompleted || completingDay === dayPlan.date}
-                      className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
-                    >
-                      {isCompleted
-                        ? "Day Completed"
-                        : completingDay === dayPlan.date
-                        ? "Saving..."
-                        : "Finish This Day"}
-                    </button>
+                    {dayExpanded && (
+                      <button
+                        type="button"
+                        onClick={() => handleCompleteDay(dayPlan.date)}
+                        disabled={isCompleted || completingDay === dayPlan.date}
+                        className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                      >
+                        {isCompleted
+                          ? "Day Completed"
+                          : completingDay === dayPlan.date
+                          ? "Saving..."
+                          : "Finish This Day"}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
             })()}
 
-            <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+            {expandedDays[dayPlan.date] !== false && (
+              <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
               {dayPlan.meals.map((meal) => {
                 const mealTotals = meal.totalNutrients || emptyMacros;
                 const isCompleted = dayPlan.status === "Completed";
@@ -396,20 +419,20 @@ const DietPlan = () => {
                               onChange={(event) =>
                                 handleFoodConsumption(meal._id, food._id, event.target.checked)
                               }
-                              disabled={isCompleted}
-                              className="mt-1 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                            />
+                                  disabled={isCompleted}
+                                  className="mt-1 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                                />
 
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div>
-                                  <p className="font-semibold text-gray-900">{food.name}</p>
-                                  <p className="text-sm text-gray-500">
-                                    Serving: {food.servingSize?.amount ?? 0} {food.servingSize?.unit ?? "unit"}
-                                  </p>
-                                </div>
-                                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-700 shadow">
-                                  {food.calories} kcal
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                    <div>
+                                      <p className="font-semibold text-gray-900">{food.name}</p>
+                                      <p className="text-sm text-gray-500">
+                                        Serving: {food.servingSize?.amount ?? 0} {food.servingSize?.unit ?? "unit"}
+                                      </p>
+                                    </div>
+                                    <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-gray-700 shadow">
+                                      {food.calories} kcal
                                 </span>
                               </div>
 
@@ -454,6 +477,37 @@ const DietPlan = () => {
                 );
               })}
             </div>
+            )}
+
+            {expandedDays[dayPlan.date] === false && (
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {dayPlan.meals.map((meal) => {
+                  const consumedCount = meal.foods.filter((food) => consumedFoods[food._id]).length;
+                  const mealProgress = getProgressPercent(consumedCount, meal.foods.length);
+
+                  return (
+                    <div
+                      key={meal._id}
+                      className="rounded-2xl border border-gray-100 bg-white/90 p-4 shadow-md"
+                    >
+                      <h3 className="text-lg font-semibold text-gray-900">{meal.mealType}</h3>
+                      <p className="mt-2 text-sm text-gray-600">
+                        {consumedCount}/{meal.foods.length} items consumed
+                      </p>
+                      <div className="mt-3 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-green-700">{mealProgress}%</span>
+                        <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200">
+                          <div
+                            className="h-full bg-gradient-to-r from-green-500 to-blue-500"
+                            style={{ width: `${mealProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         ))}
 

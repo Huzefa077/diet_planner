@@ -7,6 +7,9 @@ const LogoutButton = () => {
   const clearSession = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
+    localStorage.removeItem("username");
+    // Dispatch a custom event to notify other components
+    window.dispatchEvent(new Event("logoutEvent"));
   };
 
   const handleLogout = async () => {

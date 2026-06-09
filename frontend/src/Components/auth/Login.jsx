@@ -32,6 +32,7 @@ const Login = () => {
       if (data.token) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.user._id);
+        localStorage.setItem("username", data.user.username || data.user.email);
         console.log("Token Stored Successfully:", localStorage.getItem("token"));
         navigate("/");
       } else {

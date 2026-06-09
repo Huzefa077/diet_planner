@@ -2,6 +2,10 @@ import { User } from "../models/user.model.js";
 import { Food } from "../models/foodItem.model.js";
 import { Meal } from "../models/meal.model.js";
 
+const MAX_RECOMMENDATIONS_PER_MEAL = 5;
+const USER_DISLIKE_THRESHOLD = 2;
+const CANDIDATE_POOL_SIZE = 40;
+
 /**
  * Generate a diet plan for a user between specified dates.
  * @param {String} userId - User ID.
@@ -208,23 +212,34 @@ const recommendFoods = async (user, calorieLimit, mealType) => {
   };
 
   const categoryFilter = getCategoryFilter(mealType);
-
-  /*
-  return await Food.find({
+  const candidates = await Food.find({
     calories: { $lte: calorieLimit },
     ...preferences,
     category: { $in: categoryFilter },
-  }).limit(5);
-   // Select up to 5 items per meal
-   */
+  }).lean();
 
-   return await Food.aggregate([
-    { $match: { calories: { $lte: calorieLimit }, ...preferences, category: { $in: categoryFilter } } },
-    { $sample: { size: 5 } }, // Random selection to ensure variety
-    
-    
-  ]);
-  
+  if (!candidates.length) {
+    return [];
+  }
+
+  const filteredCandidates = candidates.filter((food) => {
+    const userRating = getUserRatingForFood(food, user._id);
+    return userRating === null || userRating > USER_DISLIKE_THRESHOLD;
+  });
+
+  const candidatePool =
+    filteredCandidates.length >= MAX_RECOMMENDATIONS_PER_MEAL
+      ? filteredCandidates
+      : candidates;
+
+  const rankedFoods = candidatePool
+    .map((food) => ({
+      ...food,
+      recommendationScore: scoreFoodForUser(food, user._id, calorieLimit),
+    }))
+    .sort((a, b) => b.recommendationScore - a.recommendationScore);
+
+  return pickTopFoodsWithVariety(rankedFoods, MAX_RECOMMENDATIONS_PER_MEAL);
 };
 
 /**
@@ -263,6 +278,61 @@ const getCategoryFilter = (mealType) => {
   return filters[mealType] || [];
 };
 
+const getUserRatingForFood = (food, userId) => {
+  if (!food?.ratings?.length || !userId) return null;
+
+  const matchedRating = food.ratings.find(
+    (entry) => entry.userId?.toString() === userId.toString()
+  );
+
+  return matchedRating ? matchedRating.rating : null;
+};
+
+const scoreFoodForUser = (food, userId, calorieLimit) => {
+  const userRating = getUserRatingForFood(food, userId);
+  const averageRating = food.averageRating || 0;
+  const ratingCount = food.ratingCount || 0;
+  const calorieGap = Math.abs((food.calories || 0) - calorieLimit);
+
+  let score = 0;
+
+  if (userRating !== null) {
+    score += userRating * 30;
+  }
+
+  score += averageRating * 8;
+  score += Math.min(ratingCount, 10);
+  score -= calorieGap / 25;
+  score += Math.random() * 5;
+
+  return score;
+};
+
+const pickTopFoodsWithVariety = (rankedFoods, limit) => {
+  const selectedFoods = [];
+  const seenNames = new Set();
+
+  for (const food of rankedFoods.slice(0, CANDIDATE_POOL_SIZE)) {
+    const normalizedName = food.name?.toLowerCase();
+
+    if (normalizedName && seenNames.has(normalizedName)) {
+      continue;
+    }
+
+    selectedFoods.push(food);
+
+    if (normalizedName) {
+      seenNames.add(normalizedName);
+    }
+
+    if (selectedFoods.length === limit) {
+      break;
+    }
+  }
+
+  return selectedFoods;
+};
+
 
 export const updateFoodRating = async (foodId, newRating) => {
   const food = await Food.findById(foodId);
@@ -293,15 +363,18 @@ export const getSeasonalFoods = async (user) => {
     Autumn: ["Vegetables A-E", "Seeds and Nuts", "Fruits R-Z"],
   };
 
-  return await Food.aggregate([
-    {
-      $match: {
-        category: { $in: seasonalCategories[season] || [] },
-        ...buildPreferenceFilters(user),
-      },
-    },
-    { $sample: { size: 16 } },
-  ]);
+  const seasonalFoods = await Food.find({
+    category: { $in: seasonalCategories[season] || [] },
+    ...buildPreferenceFilters(user),
+  }).lean();
+
+  return seasonalFoods
+    .map((food) => ({
+      ...food,
+      recommendationScore: scoreFoodForUser(food, user._id, food.calories || 0),
+    }))
+    .sort((a, b) => b.recommendationScore - a.recommendationScore)
+    .slice(0, 16);
 };
 
 export const getCurrentSeason = () => {

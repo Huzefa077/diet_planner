@@ -47,16 +47,52 @@ export const submitFeedback = async (req, res) => {
 
 export const submitRating = async (req, res) => {
   try {
-      const { foodId, mealId, rating, userId } = req.body;
+      const { foodId, rating, userId } = req.body;
 
-      // Store rating in database
-      await Food.findByIdAndUpdate(foodId, {
-          $push: { ratings: { userId, rating } }
+      if (!foodId || !userId || !rating) {
+        return res.status(400).json({
+          success: false,
+          message: "Food, user, and rating are required",
+        });
+      }
+
+      const numericRating = Number(rating);
+      if (Number.isNaN(numericRating) || numericRating < 1 || numericRating > 5) {
+        return res.status(400).json({
+          success: false,
+          message: "Rating must be a number between 1 and 5",
+        });
+      }
+
+      const food = await Food.findById(foodId);
+      if (!food) {
+        return res.status(404).json({ success: false, message: "Food not found" });
+      }
+
+      const existingRating = food.ratings.find(
+        (entry) => entry.userId.toString() === userId
+      );
+
+      if (existingRating) {
+        existingRating.rating = numericRating;
+      } else {
+        food.ratings.push({ userId, rating: numericRating });
+      }
+
+      const ratingTotal = food.ratings.reduce((sum, entry) => sum + entry.rating, 0);
+      food.ratingCount = food.ratings.length;
+      food.averageRating = food.ratingCount ? ratingTotal / food.ratingCount : 0;
+
+      await food.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Rating submitted successfully",
+        data: {
+          averageRating: food.averageRating,
+          ratingCount: food.ratingCount,
+        },
       });
-      
-      res.status(200).json({ success: true, message: "Rating submitted successfully" });
-      console.log("Rating submitted successfully")
-      
   } catch (error) {
       console.error("Error submitting rating:", error);
       res.status(500).json({ success: false, message: "Server error" });

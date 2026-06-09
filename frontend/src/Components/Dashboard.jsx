@@ -277,7 +277,14 @@ const Dashboard = () => {
               <tbody className="divide-y divide-gray-100">
                 {dayData.map((day) => (
                   <tr key={day.dateLabel}>
-                    <td className="px-4 py-3 font-medium text-gray-900">{day.dateLabel}</td>
+                    <td className="px-4 py-3 font-medium text-gray-900">
+                      <Link
+                        to="/diet-plan"
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        {day.dateLabel}
+                      </Link>
+                    </td>
                     <td className="px-4 py-3 text-gray-700">{day.completion}%</td>
                     <td className="px-4 py-3 text-gray-700">
                       {day.consumedFoods}/{day.totalFoods}

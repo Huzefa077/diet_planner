@@ -1,11 +1,16 @@
 import { Link } from "react-router-dom";
 
-const HeroSection = () => {
+const HeroSection = ({ username }) => {
   return (
     <section className="relative w-full min-h-screen flex items-center justify-center bg-gray-100">
       <div className="container mx-auto px-6 lg:px-20 flex flex-col lg:flex-row items-center">
         {/* Left Side - Text Content */}
         <div className="lg:w-1/2 text-center lg:text-left">
+          {username && (
+            <p className="text-lg font-semibold text-green-600 mb-3">
+              👋 Hello, {username}!
+            </p>
+          )}
           <h1 className="text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
             AI-Powered{" "}
             <span className="text-green-600">Personalized Diet Plans</span>

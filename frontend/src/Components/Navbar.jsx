@@ -5,7 +5,20 @@ import LogoutButton from "./auth/Logout";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const isLoggedIn = Boolean(localStorage.getItem("token"));
+  const [isLoggedIn, setIsLoggedIn] = useState(Boolean(localStorage.getItem("token")));
+
+  useEffect(() => {
+    // Check login state on mount
+    setIsLoggedIn(Boolean(localStorage.getItem("token")));
+
+    // Listen for logout event
+    const handleLogout = () => {
+      setIsLoggedIn(false);
+    };
+
+    window.addEventListener("logoutEvent", handleLogout);
+    return () => window.removeEventListener("logoutEvent", handleLogout);
+  }, []);
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 left-0 z-50">
